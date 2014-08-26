@@ -1,2 +1,1 @@
-chat-macros
-===========
+TagPro chat macros generator

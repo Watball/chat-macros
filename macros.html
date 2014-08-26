@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Easy chat macros</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <style>
+        label.allchat-label {
+            display: inline-block;
+            text-align: center;
+            font-weight: bold;
+            font-size: 110%;
+            width: 5%;
+            vertical-align: top;
+        }
+        input.allchat {
+            display: none;
+        }
+        label.allchat-label input.allchat + span::after {
+            content: "team";
+            display: inline-block;
+            width: 90%;
+            margin-top: 1px;
+            padding: 3px 1px;
+            border: 1px solid grey;
+            border-radius: 3px;
+            -webkit-animation: redblue 5s infinite;
+            -moz-animation: redblue 5s infinite;
+            -o-animation: redblue 5s infinite;
+            animation: redblue 5s infinite;
+            
+        }
+        label.allchat-label input.allchat:checked + span::after {
+            content: "all";
+            animation: none;
+        }
+        @-webkit-keyframes redblue {
+            from {
+                color: #FF0000;
+            }
+            50% {
+                color: #0000FF;
+            }
+            to {
+                color: #FF0000;
+            }
+        }
+        @-moz-keyframes redblue {
+            from {
+                color: #FF0000;
+            }
+            50% {
+                color: #0000FF;
+            }
+            to {
+                color: #FF0000;
+            }
+        }
+        @-o-keyframes redblue {
+            from {
+                color: #FF0000;
+            }
+            50% {
+                color: #0000FF;
+            }
+            to {
+                color: #FF0000;
+            }
+        }
+        @keyframes redblue {
+            from {
+                color: #FF0000;
+            }
+            50% {
+                color: #0000FF;
+            }
+            to {
+                color: #FF0000;
+            }
+        }
+        input.key {
+            width: 10%;
+        }
+        input.message {
+            width: 77%;
+        }
+        #messages button {
+            margin-top: -10px;
+        }
+        #code-output {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero-unit">
+            <h1>Easy TagPro chat macros</h1>
+            <p>Easy way to generate macros for chatting. Uses a modified version of <a href="http://www.reddit.com/r/TagPro/comments/1bijwm/so_you_want_chat_macros/">steppin's userscript</a>.</p>
+            <p><strong>Updated 8 august 2014!</strong> Added a toggle for all chat or team chat. Ain't that nifty.</p>
+            <p style="line-height: 100%"><small><strong>Minor update 26 august 2014:</strong> macros don't queue up forever; fixed new download link appearing every time you generate; you can now double click generated code to select everything.</small></p>
+        </div>
+        <div class="row">
+            <div class="span12 thumbnail" id="input-div">
+                <p>Hit a key in the first textfield, then enter the message that gets sent when you hit it next to it. Click the box to toggle between team chat and all chat. Press enter or click the + to get another field. Press the red X to remove a field. When you're done, click generate and install the generated userscript.</p>
+                <span id="messages">
+                </span>
+                <span style="display: block; width: 100%; text-align: right;"><button class="btn btn-primary" id="generate">Generate</button></span>
+                <span id="downloadLink"></span>
+            </div>
+            <div class="span12 thumbnail" id="code-output">
+                <pre>
+// ==UserScript==
+// @name          TagPro Chat Macros Userscript
+// @namespace     http://www.reddit.com/user/contact_lens_linux/
+// @description   Help your team with quick chat macros.
+// @include       http://tagpro-*.koalabeast.com:*
+// @include       http://tangent.jukejuice.com:* 
+// @include       http://maptest.newcompte.fr:* 
+// @license       GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
+// @author        steppin, Watball
+// @version       0.4
+// ==/UserScript==
+
+(function() {
+
+  function contentEval(source) {
+    // Check for function input.
+    if ('function' == typeof source) {
+      // Execute this function with no arguments, by adding parentheses.
+      // One set around the function, required for valid syntax, and a
+      // second empty set calls the surrounded function.
+      source = '(' + source + ')();'
+    }
+
+    // Create a script node holding this  source code.
+    var script = document.createElement('script');
+    script.setAttribute("type", "application/javascript");
+    script.textContent = source;
+
+    // Insert the script node into the page, so it will run, and immediately
+    // remove it to clean up.
+    document.body.appendChild(script);
+    document.body.removeChild(script);
+  }
+
+  function actualScript() {
+    var macros = {};
+<span id="insert"></span>
+    // Game bindings overriding adapted from JohnnyPopcorn's NeoMacro https://gist.github.com/JohnnyPopcorn/8150909
+    var handlerbtn = $('#macrohandlerbutton');
+    handlerbtn.keydown(keydownHandler)
+              .keyup(keyupHandler);
+    handlerbtn.focus();
+
+    $(document).keydown(documentKeydown);
+    function documentKeydown(event) {
+      if (!tagpro.disableControls) {
+        handlerbtn.focus(); // The handler button should be always focused
+      }
+    }
+
+    function keydownHandler(event) {
+      var code = event.keyCode || event.which;
+      if (code in macros && !tagpro.disableControls) {
+        chat(macros[code]);
+        event.preventDefault();
+        event.stopPropagation();
+        //console.log(macros[code]);
+      }
+    }
+
+    function keyupHandler(event) {
+      if (event.keyCode in macros && !tagpro.disableControls) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }
+
+    var lastMessage = 0;
+    var active = false;
+    function chat(chatMessage) {
+      var limit = 500 + 10;
+      var now = new Date();
+      var timeDiff = now - lastMessage;
+      if (timeDiff > limit) {
+          tagpro.socket.emit("chat", chatMessage);
+          lastMessage = new Date();
+      } else if (timeDiff >= 0 && !active) {
+          active = true;
+          setTimeout(function(chatMessage) { chat(chatMessage); active = false }, limit - timeDiff, chatMessage);
+      }
+    }
+  }
+
+  // This dummy input will handle macro keypresses
+  var btn = document.createElement("input");
+  btn.style.opacity = 0;
+  btn.style.position = "absolute";
+  btn.style.top = "-100px";
+  btn.style.left = "-100px";
+  btn.id = "macrohandlerbutton";
+  document.body.appendChild(btn);
+
+  contentEval(actualScript);
+})();
+</pre>
+            </div>
+        </div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+    function muhElem() {
+        var weElemNow, weLabelNow, weAllChatNow, weAllChatMessageNow, weKeyNow, weMessageNow, weButtonNow;
+
+        weElemNow = $(document.createElement('span'))
+                     .addClass('key-message');
+
+        weLabelNow = $(document.createElement('label'))
+                      .addClass('allchat-label');
+        weAllChatNow = $(document.createElement('input'))
+                       .attr({'type': 'checkbox', 'class': 'allchat'});
+        weAllChatMessageNow = $(document.createElement('span'));
+        weLabelNow.append(weAllChatNow, weAllChatMessageNow);
+        weElemNow.append(weLabelNow, ' ');
+
+        weKeyNow = $(document.createElement('input'))
+                    .attr({'type': 'text', 'class': 'key', 'placeholder': 'Key'})
+                    .keyup(function(e) {
+                        $(this).data('keyCode', e.which)
+                               .val(niceKeyCodes[e.which] || String.fromCharCode(e.which));
+                    });
+        weElemNow.append(weKeyNow).append(' ');
+        
+        weMessageNow = $(document.createElement('input'))
+                        .attr({'type': 'text', 'class': 'message', 'placeholder': 'Type a message', 'maxlength': '70'})
+                        .keypress(function(e) {
+                            if (e.which == 13) {
+                                $(this).next().click();
+                            }
+                        });
+        weElemNow.append(weMessageNow).append(' ');
+
+        weButtonNow = $(document.createElement('button'))
+                       .addClass('btn')
+                       .text('+')
+                       .click(function(){
+                            $(this).off('click')
+                                   .click(function() { $(this).parent().remove() })
+                                   .addClass('btn-danger')
+                                   .text('X');
+                            $(this).prev().off('keypress');
+                            $(this).prev().keypress(function(e) { if (e.which == 13) { $(this).parent().next().children().first().focus() } });
+                            $('#messages').append(muhElem());
+                            $(this).parent().next().children()[1].focus();
+                       });
+        weElemNow.append(weButtonNow);
+
+        return weElemNow;
+    }
+
+    var niceKeyCodes = {
+        8: "backspace",
+        9: "tab",
+        13: "enter",
+        16: "shift",
+        17: "ctrl",
+        18: "alt",
+        19: "pause/break",
+        20: "caps lock",
+        27: "escape",
+        33: "page up",
+        34: "page down",
+        35: "end",
+        36: "home",
+        37: "left arrow",
+        38: "up arrow",
+        39: "right arrow",
+        40: "down arrow",
+        45: "insert",
+        46: "delete",
+        91: "left window",
+        92: "right window",
+        93: "select key",
+        96: "numpad 0",
+        97: "numpad 1",
+        98: "numpad 2",
+        99: "numpad 3",
+        100: "numpad 4",
+        101: "numpad 5",
+        102: "numpad 6",
+        103: "numpad 7",
+        104: "numpad 8",
+        105: "numpad 9",
+        106: "multiply",
+        107: "add",
+        109: "subtract",
+        110: "decimal point",
+        111: "divide",
+        112: "F1",
+        113: "F2",
+        114: "F3",
+        115: "F4",
+        116: "F5",
+        117: "F6",
+        118: "F7",
+        119: "F8",
+        120: "F9",
+        121: "F10",
+        122: "F11",
+        123: "F12",
+        144: "num lock",
+        145: "scroll lock",
+        186: ",",
+        187: "=",
+        188: ",",
+        189: "-",
+        190: ".",
+        191: "/",
+        192: "`",
+        219: "[",
+        220: "\\",
+        221: "]",
+        222: "'"
+    };
+
+    $('#messages').append(muhElem());
+    
+    function generate() {
+        var macros = '';
+        $('.key-message').each(function() {
+          if ($(this).children('.message').val()) {
+            macros += '    macros[' + $(this).children('.key').data('keyCode') + '] = {"message": "' + $(this).children('.message').val() + '", "toAll": ' + $(this).find('.allchat').prop('checked') + '}; // ' + $(this).children('.key').val() + '\n' }});
+        $('#insert').text(macros);
+        var fileContent = $('#code-output').text();
+        var file = new Blob([fileContent], {type: "data:text/csv;charset=utf-8"});
+
+        var downloadLink = $(document.createElement('a'))
+                            .attr({'download': 'chat-macros.user.js', 'href': (window.URL || window.webkitURL).createObjectURL(file)})
+                            .text('Click to download your script');
+        $('#downloadLink').empty().append(downloadLink);
+        $('#code-output').show('fast');
+    }
+    $('#generate').click(generate);
+    
+    // http://stackoverflow.com/a/987376
+    $('pre').dblclick(function() {
+        var doc = document,
+            range, selection;
+        if (doc.body.createTextRange) { //ms
+            range = doc.body.createTextRange();
+            range.moveToElementText(this);
+            range.select();
+        } else if (window.getSelection) { //all others
+            selection = window.getSelection();        
+            range = doc.createRange();
+            range.selectNodeContents(this);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    });
+    </script>
+</body>
+</html>
