@@ -1,0 +1,85 @@
+label.allchat-label {
+    display: inline-block;
+    text-align: center;
+    font-weight: bold;
+    font-size: 110%;
+    width: 5%;
+    vertical-align: top;
+}
+input.allchat {
+    display: none;
+}
+label.allchat-label input.allchat + span::after {
+    content: "team";
+    display: inline-block;
+    width: 90%;
+    margin-top: 1px;
+    padding: 3px 1px;
+    border: 1px solid grey;
+    border-radius: 3px;
+    -webkit-animation: redblue 5s infinite;
+    -moz-animation: redblue 5s infinite;
+    -o-animation: redblue 5s infinite;
+    animation: redblue 5s infinite;
+    
+}
+label.allchat-label input.allchat:checked + span::after {
+    content: "all";
+    animation: none;
+}
+@-webkit-keyframes redblue {
+    from {
+        color: #FF0000;
+    }
+    50% {
+        color: #0000FF;
+    }
+    to {
+        color: #FF0000;
+    }
+}
+@-moz-keyframes redblue {
+    from {
+        color: #FF0000;
+    }
+    50% {
+        color: #0000FF;
+    }
+    to {
+        color: #FF0000;
+    }
+}
+@-o-keyframes redblue {
+    from {
+        color: #FF0000;
+    }
+    50% {
+        color: #0000FF;
+    }
+    to {
+        color: #FF0000;
+    }
+}
+@keyframes redblue {
+    from {
+        color: #FF0000;
+    }
+    50% {
+        color: #0000FF;
+    }
+    to {
+        color: #FF0000;
+    }
+}
+input.key {
+    width: 10%;
+}
+input.message {
+    width: 77%;
+}
+#messages button {
+    margin-top: -10px;
+}
+#code-output {
+    display: none;
+}
