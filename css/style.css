@@ -83,3 +83,6 @@ input.message {
 #code-output {
     display: none;
 }
+#file-import {
+    display: none;
+}

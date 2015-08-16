@@ -22,7 +22,7 @@ function muhElem() {
     
     weMessageNow = $(document.createElement('input'))
                     .attr({'type': 'text', 'class': 'message', 'placeholder': 'Type a message', 'maxlength': '70'})
-                    .keypress(function(e) {
+                    .keyup(function(e) {
                         if (e.which == 13) {
                             $(this).next().click();
                         }
@@ -34,11 +34,11 @@ function muhElem() {
                    .text('+')
                    .click(function(){
                         $(this).off('click')
-                               .click(function() { $(this).parent().remove() })
+                               .click(function() { $(this).parent().remove(); })
                                .addClass('btn-danger')
                                .text('X');
-                        $(this).prev().off('keypress');
-                        $(this).prev().keypress(function(e) { if (e.which == 13) { $(this).parent().next().children().first().focus() } });
+                        $(this).prev().off('keyup');
+                        $(this).prev().keyup(function(e) { if (e.which == 13) { $(this).parent().next().children().first().focus(); } });
                         $('#messages').append(muhElem());
                         $(this).parent().next().children()[1].focus();
                    });
@@ -118,7 +118,7 @@ function generate() {
     var macros = '';
     $('.key-message').each(function() {
       if ($(this).children('.message').val()) {
-        macros += '    macros[' + $(this).children('.key').data('keyCode') + '] = {"message": "' + $(this).children('.message').val() + '", "toAll": ' + $(this).find('.allchat').prop('checked') + '}; // ' + $(this).children('.key').val() + '\n' }});
+        macros += '    macros[' + $(this).children('.key').data('keyCode') + '] = {"message": "' + $(this).children('.message').val() + '", "toAll": ' + $(this).find('.allchat').prop('checked') + '}; // ' + $(this).children('.key').val() + '\n'; }});
     $('#insert').text(macros);
     var fileContent = $('#code-output').text();
     var file = new Blob([fileContent], {type: "data:text/csv;charset=utf-8"});
@@ -130,6 +130,48 @@ function generate() {
     $('#code-output').show('fast');
 }
 $('#generate').click(generate);
+
+// export macros.
+function doexport() {
+    var keys = [];
+    $('.key-message').each(function() {
+        if ($(this).children('.message').val()) {
+            keys.push({
+                key: $(this).children('.key').data('keyCode'),
+                msg: $(this).children('.message').val(),
+                all: $(this).find('.allchat').prop('checked')
+            });
+        }
+    });
+    var file = new Blob([JSON.stringify(keys)], {type: "text/json"});
+    saveAs(file, "macros.json");
+}
+$('#export').click(doexport);
+
+// import macros.
+function doimport() {
+    var file = this.files[0];
+    if (file) {
+        var fr = new FileReader();
+        fr.onload = function (e) {
+            var data = JSON.parse(e.target.result);
+            data.forEach(function (key) {
+                var row = $('.key-message:last-child');
+                row.children('.key').trigger(
+                    $.Event('keyup', {keyCode: key.key, which: key.key})
+                );
+                row.children('.message').val(key.msg);
+                row.find('.allchat').prop('checked', key.all);
+                row.children('.btn').click();
+            });
+        };
+        fr.readAsText(file);
+    }
+}
+$('#file-import').change(doimport);
+$('#import').click(function () {
+    $('#file-import').click();
+});
 
 // http://stackoverflow.com/a/987376
 $('pre').dblclick(function() {

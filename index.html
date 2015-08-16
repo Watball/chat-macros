@@ -23,7 +23,12 @@
                 <p>Hit a key in the first textfield, then enter the message that gets sent when you hit it next to it. Click the box to toggle between team chat and all chat. Press enter or click the + to get another field. Press the red X to remove a field. When you're done, click generate and install the generated userscript.</p>
                 <span id="messages">
                 </span>
-                <span style="display: block; width: 100%; text-align: right;"><button class="btn btn-primary" id="generate">Generate</button></span>
+                <span style="display: block; width: 100%; text-align: right;">
+                    <button class="btn" id="import">Import</button>
+                    <input type="file" accepts="json" id="file-import">
+                    <button class="btn" id="export">Export</button>
+                    <button class="btn btn-primary" id="generate">Generate</button>
+                </span>
                 <span id="downloadLink"></span>
             </div>
             <div class="span12 thumbnail" id="code-output">
@@ -128,6 +133,7 @@
     </div>
     <script src="js/jquery-2.1.4.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/FileSaver.min.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>
